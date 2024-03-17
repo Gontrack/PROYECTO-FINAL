@@ -1,0 +1,850 @@
+#include <iostream>
+#include <math.h>
+#include <string.h>
+#include <stdio.h>
+#include <string>
+
+using namespace std;
+
+struct pedido
+{
+    string domicilio;
+    int zona;
+    float volumen;
+    float importe;
+    int codigo;
+};
+
+struct NodoCola
+{
+    pedido data;
+    NodoCola*sig;
+};
+
+
+struct SubNodoLista
+{
+    pedido paquete;
+    SubNodoLista*sig;
+};
+
+struct repartidoresActivos
+{
+    int dni;
+    char nombre[35];
+    char patente[6];
+    int zona;
+    char transp;
+    SubNodoLista*ListaPedidos;
+
+};
+
+struct NodoListaPedidos
+{
+    pedido Ped;
+    NodoListaPedidos*sig;
+};
+
+struct NodoLista
+{
+repartidoresActivos repartidores;
+NodoLista*sig;
+};
+
+struct Comercios
+{
+    int codigo;
+    int cantEntregas;
+};
+
+struct repartidores
+{
+    int dni;
+    char nombre[35];
+    char patente[6];
+    int zona;
+    char transp;
+
+};
+
+struct NodoArbol
+{
+    Comercios data;
+    NodoArbol*izq;
+    NodoArbol*der;
+};
+
+pedido desencolarPedArchivo(NodoListaPedidos*&lista);
+bool ConfirmarSiExiste(NodoArbol*raiz,int cod);
+void InsertarArbol(NodoArbol*&raiz,int cod);
+void mostrarSublista(SubNodoLista*&lista);
+pedido desencolarPed(NodoListaPedidos*&lista,int cont);
+void crearArchivo(NodoListaPedidos*&lista);
+void InsertarSubOrdenado(SubNodoLista*&sublista,pedido ped);
+NodoLista*InsertarOrdenado(NodoLista*&lista,repartidoresActivos rep);
+void listar(repartidores repartidor,NodoListaPedidos*&ListaPed,NodoLista*&lista,int cont);
+int validarNum(char num[]);
+int verificarZona(NodoListaPedidos*lista);
+int verificarCodigo(NodoListaPedidos*lista);
+int verificarTrans(NodoListaPedidos*lista);
+bool funciondecimal(char num[]);
+void listarIn(NodoArbol*raiz);
+void parte1(NodoListaPedidos*&listaPed);
+void parte2(NodoListaPedidos*&ListaPed,NodoLista*&lista,NodoArbol*&raiz);
+void parte3(NodoLista*&lista);
+void parte4(NodoArbol*&raiz);
+void ListarPed(NodoListaPedidos*&lista,pedido aux);
+
+int main()
+{
+    char auxOpcion[10];
+    int auxInt, opcion;
+    NodoArbol*Raices=NULL;
+    NodoListaPedidos*ListaPedidos=NULL;
+    NodoLista*ListaRepartidores=NULL;
+    do
+    {
+        //system("cls");
+        cout<<"------------------------------------------"<<endl;
+        cout<<"Interfaz de Opciones"<<endl;
+        cout<<"------------------------------------------"<<endl;
+        cout<<"Opcion 1: Recibir pedido."<<endl;
+        cout<<"Opcion 2: Asignar pedidos."<<endl;
+        cout<<"Opcion 3: Mostrar."<<endl;
+        cout<<"Opcion 4: Salir."<<endl;
+        cout<<"------------------------------------------"<<endl;
+        cout<<"Elegir: ";
+            cin>>auxOpcion;
+        cout<<"------------------------------------------"<<endl;
+        auxInt=validarNum(auxOpcion);
+        if(auxInt==0)
+        {
+            opcion=atoi(auxOpcion);
+            switch(opcion)
+            {
+            case 1:
+                cout<<"RECIBIR PEDIDO"<<endl;
+                cout<<"------------------------------------------"<<endl;
+                    parte1(ListaPedidos);
+                break;
+            case 2:
+                cout<<"ASIGNAR PEDIDOS"<<endl;
+                cout<<"------------------------------------------"<<endl;
+                parte2(ListaPedidos,ListaRepartidores,Raices);
+                break;
+            case 3:
+                system("cls");
+                cout<<"MOSTRAR"<<endl;
+                cout<<"------------------------------------------"<<endl;
+                parte3(ListaRepartidores);
+                cout<<endl;
+                break;
+            case 4:
+                break;
+            default:
+                cout<<"ERROR:Opcion incorrecta"<<endl;
+            }
+        }
+        else
+        {
+            cout<<"ERROR:Vuelva a ingresar."<<endl;
+            cout<<"------------------------------------------"<<endl;
+        }
+    }while(opcion!=4);
+
+    parte4(Raices);
+    crearArchivo(ListaPedidos);
+    return 0;
+}
+
+void InsertarArbol(NodoArbol*&raiz,int cod)
+{
+    bool hay=false;
+
+    if(raiz==NULL)
+    {
+    NodoArbol*n=new NodoArbol;
+    n->data.cantEntregas=1;
+    n->data.codigo=cod;
+    n->izq=NULL;
+    n->der=NULL;
+    raiz=n;
+    }
+    else
+        {
+            hay=ConfirmarSiExiste(raiz,cod);
+            NodoArbol*r,*ant;
+            r=raiz;
+            while(r!=NULL)
+            {
+                    if(cod==r->data.codigo)
+                        r->data.cantEntregas++;
+                    ant=r;
+                    if(cod<r->data.codigo)
+                        r=r->izq;
+                    else
+                        r=r->der;
+            }
+
+            if(hay==false)
+            {
+            NodoArbol*n=new NodoArbol;
+            n->data.cantEntregas=1;
+            n->data.codigo=cod;
+            n->izq=NULL;
+            n->der=NULL;
+            if(cod<ant->data.codigo)
+                ant->izq=n;
+            else
+                ant->der=n;
+            }
+        }
+}
+
+bool ConfirmarSiExiste(NodoArbol*raiz,int cod)
+{
+    if(raiz!=NULL)
+    {
+        listarIn(raiz->izq);
+        if(raiz->data.codigo==cod)
+            return true;
+        listarIn(raiz->der);
+    }
+}
+
+ void parte4(NodoArbol*&raiz)
+ {
+     cout<<"COMERCIOS | ENTREGAS"<<endl;
+     listarIn(raiz);
+
+ }
+
+ void listarIn(NodoArbol*raiz)
+{
+    if(raiz!=NULL)
+    {
+        listarIn(raiz->izq);
+        cout<<raiz->data.codigo<<"       ";
+        cout<<raiz->data.cantEntregas<<endl;
+        listarIn(raiz->der);
+    }
+}
+
+void crearArchivo(NodoListaPedidos*&lista)
+{
+    pedido auxPed;
+    FILE*arch=fopen("PedidosNoEntregados.txt","wb");
+    while(lista!=NULL)
+    {
+    auxPed=desencolarPedArchivo(lista);
+    fwrite(&auxPed,sizeof(pedido),1,arch);
+    }
+    fclose(arch);
+}
+
+pedido desencolarPedArchivo(NodoListaPedidos*&lista)
+{
+    pedido auxped;
+    NodoListaPedidos*p=lista;
+    auxped=p->Ped;
+    lista=p->sig;
+    delete p;
+    return auxped;
+}
+
+int validarNum(char num[])
+{
+    int i=0,sw=0,j;
+    j=strlen(num);
+    while(i<j && sw==0)
+    {
+        if(isdigit(num[i])!=0)
+        {
+            i++;
+        }
+        else
+        {
+            sw=1;
+        }
+    }
+    return sw;
+}
+
+void parte1(NodoListaPedidos*&listaPed)
+{
+    pedido aux;
+    int valido=0,auxInt,a=0,Transporte;
+    float auxFloat;
+    char auxDom[100],auxZona[10],auxCharFloat[10],auxCod[12];
+
+  /*ingresos*/{
+    //ingreso domicilio
+   while(a==0)
+   {
+    cout<<"Ingrese domicilio: ";
+        fflush(stdin);
+        cin.getline(auxDom,100);
+        string auxStr(auxDom);
+        aux.domicilio=auxStr;
+        a++;
+   }
+   a=0;
+
+    //ingreso zona
+    while(a==0)
+    {
+    cout<<"Ingreso zona(1-14): ";
+        fflush(stdin);
+        cin>>auxZona;
+        if(validarNum(auxZona)!=1)
+        {
+            if(atoi(auxZona)>=1 && atoi(auxZona)<=14)
+            {
+                aux.zona=atoi(auxZona);
+                a++;
+            }
+            else
+                cout<<"ERROR:Ingreso de Zona invalido."<<endl;
+        }
+        else
+            cout<<"ERROR:Ingreso de Zona invalido."<<endl;
+    }
+    a=0;
+
+    //ingreso volumen
+    while(a==0)
+    {
+    cout<<"Ingreso Volumen en metros cubicos(usar punto): ";
+    fflush(stdin);
+        cin>>auxCharFloat;
+        if(funciondecimal(auxCharFloat))
+        {
+            auxFloat=atof(auxCharFloat);
+            if(auxFloat>0)
+            {
+                aux.volumen=auxFloat;
+                a++;
+            }
+            else
+                cout<<"ERROR:Ingreso de Volumen invalido."<<endl;
+        }
+        else
+            cout<<"ERROR:Ingreso de Volumen invalido."<<endl;
+    }
+    a=0;
+    //ingreso importe
+    while(a==0)
+    {
+        cout<<"Ingrese Importe(usar punto): $";
+        fflush(stdin);
+            cin>>auxCharFloat;
+            if(funciondecimal(auxCharFloat))
+            {
+                auxFloat=atof(auxCharFloat);
+                if(auxFloat>0)
+                {
+                    aux.importe=auxFloat;
+                    a++;
+                }
+                else
+                    cout<<"ERROR:Ingreso de Importe invalido."<<endl;
+            }
+            else
+                cout<<"ERROR:Ingreso de Importe invalido."<<endl;
+
+    }
+    a=0;
+    //ingreso codigo
+    while(a==0)
+    {
+        cout<<"Ingrese el codigo numerico(6 numeros): ";
+        fflush(stdin);
+            cin>>auxCod;
+            if(strlen(auxCod)==6)
+            {
+                if(validarNum(auxCod)!=1)
+                {
+                    aux.codigo=atoi(auxCod);
+                    a++;
+                }
+                else
+                    cout<<"ERROR:Ingreso de Codigo invalido."<<endl;
+            }
+            else
+                cout<<"ERROR:Ingreso de Codigo invalido."<<endl;
+    }
+    a=0;
+  }
+  /*Verificar tipo transporte*/{
+
+      if(aux.volumen>0 && aux.volumen<0.005)
+        {Transporte=0;}//moto
+      else if(aux.volumen>=0.005 && aux.volumen<0.02)
+        {Transporte=1;}//auto
+      else if(aux.volumen>=0.02 && aux.volumen<8)
+        {Transporte=2;}//camioneta
+      else if(aux.volumen>=8)
+        {Transporte=3;}//camion
+  }
+  /*verificar si hay repartidor*/{
+    repartidores auxRep;
+    FILE *ArcMotos = fopen("RepMoto.txt", "rb");
+    FILE *ArcAuto= fopen("RepAuto.txt", "rb");
+    FILE *ArcCamioneta= fopen("RepCamioneta.txt", "rb");
+    FILE *ArcCamion= fopen("RepCamion.txt", "rb");
+
+    switch(Transporte)
+    {
+    case 0:
+        if(ArcMotos==NULL)
+        {
+
+        }
+        else
+        {
+            int a=0;
+            fread(&auxRep,sizeof(repartidores),1,ArcMotos);
+            while(!feof(ArcMotos))
+            {
+                if(auxRep.zona==aux.zona && a==0)
+                {
+                    cout<<"//PEDIDO PROCESADO//"<<endl;
+                    ListarPed(listaPed,aux);
+                    a++;
+                }
+                fread(&auxRep,sizeof(repartidores),1,ArcMotos);
+            }
+            if(a==0)
+                cout<<"//NO HAY REPARTIDOR DISPONIBLE//"<<endl;
+            fclose(ArcMotos);
+        }
+        break;
+    case 1:
+        if(ArcAuto==NULL)
+        {
+
+        }
+        else
+        {
+            int a=0;
+            fread(&auxRep,sizeof(repartidores),1,ArcAuto);
+            while(!feof(ArcAuto))
+            {
+                if(auxRep.zona==aux.zona && a==0)
+                {
+                    cout<<"//PEDIDO PROCESADO//"<<endl;
+                    ListarPed(listaPed,aux);
+                    a++;
+                }
+                fread(&auxRep,sizeof(repartidores),1,ArcAuto);
+            }
+            if(a==0)
+                cout<<"//NO HAY REPARTIDOR DISPONIBLE//"<<endl;
+            fclose(ArcAuto);
+    }
+        break;
+    case 2:
+        if(ArcCamioneta==NULL)
+        {
+
+        }
+        else
+        {
+            int a=0;
+            fread(&auxRep,sizeof(repartidores),1,ArcCamioneta);
+            while(!feof(ArcCamioneta))
+            {
+                if(auxRep.zona==aux.zona && a==0)
+                {
+                    cout<<"//PEDIDO PROCESADO//"<<endl;
+                    ListarPed(listaPed,aux);
+                    a++;
+                }
+                fread(&auxRep,sizeof(repartidores),1,ArcCamioneta);
+            }
+            if(a==0)
+                cout<<"//NO HAY REPARTIDOR DISPONIBLE//"<<endl;
+            fclose(ArcCamioneta);
+        }
+        break;
+    case 3:
+        if(ArcCamion==NULL)
+        {
+
+        }
+        else
+        {
+            int a=0;
+            fread(&auxRep,sizeof(repartidores),1,ArcCamion);
+            while(!feof(ArcCamion))
+            {
+                if(auxRep.zona==aux.zona && a==0)
+                {
+                    cout<<"//PEDIDO PROCESADO//"<<endl;
+                    ListarPed(listaPed,aux);
+                    a++;
+                }
+                fread(&auxRep,sizeof(repartidores),1,ArcCamion);
+            }
+            if(a==0)
+                cout<<"//NO HAY REPARTIDOR DISPONIBLE//"<<endl;
+            fclose(ArcCamion);
+        }
+        break;
+    default:
+        cout<<"ERROR: Archivos"<<endl;
+    }
+  }
+}
+
+bool funciondecimal(char num[])
+{
+    bool resp=false;
+    for(int contador=1;contador<=strlen(num);contador++)
+    {
+        if(num[contador-1]=='.'|| num[contador-1]==','|| (isdigit(num[contador-1])!=0))
+        {
+            resp=true;
+        }
+        else
+        {
+            resp=false;
+        }
+    }
+return resp;
+}
+
+void ListarPed(NodoListaPedidos*&lista,pedido aux)
+{
+    NodoListaPedidos*n,*p,*ant;
+    n=new NodoListaPedidos;
+    n->Ped=aux;
+    p=lista;
+    while(p!=NULL)
+    {
+        ant=p;
+        p=p->sig;
+    }
+    n->sig=p;
+    if(p!=lista)
+        ant->sig=n;
+    else
+        lista=n;
+}
+
+void parte2(NodoListaPedidos*&ListaPed,NodoLista*&lista,NodoArbol*&raiz)
+{
+    int transporte=-1,a=0,auxInt,auxZona,auxCod;
+    char auxDni[8];
+
+    //Ingreso DNI
+    cout<<"Ingrese el DNI del repartidor inscripto: ";
+        cin>>auxDni;
+    while(a==0)
+            {
+                if(validarNum(auxDni)==0)
+                {
+                    auxInt=atoi(auxDni);
+                    if(auxInt>=1000000 && auxInt<=100000000)
+                    {
+                    a++;
+                    }
+                     else
+                     {
+                        cout<<"Error:Ingrese otra vez: ";
+                        cin>>auxDni;
+                    }
+                }
+                else
+                {
+                 cout<<"Error:Ingrese otra vez: ";
+                        cin>>auxDni;
+                }
+            }
+    a=0;
+
+    NodoListaPedidos*p=ListaPed;
+    int b=0,cont=0,c=0;
+    while(p!=NULL && b==0)
+    {
+        //Verificar transporte y zona
+        transporte=verificarTrans(p);
+        auxZona=verificarZona(p);
+        auxCod=verificarCodigo(p);
+        //Comparar dni
+
+        switch(transporte)
+        {
+        case 0:
+            {
+            FILE*ArcMotos=fopen("RepMoto.txt","rb");
+            if(ArcMotos==NULL)
+            {
+
+            }
+            else
+            {
+                repartidores auxRep;
+                fread(&auxRep,sizeof(repartidores),1,ArcMotos);
+                    while(!feof(ArcMotos))
+                    {
+                        if(auxInt==auxRep.dni && c==0 && auxRep.zona==auxZona)
+                        {
+                            cout<<"//PEDIDO ASIGNADO//"<<endl;
+
+                            listar(auxRep,ListaPed,lista,cont);
+                            InsertarArbol(raiz,auxCod);
+                            c++;
+                            b++;
+                        }
+                        fread(&auxRep,sizeof(repartidores),1,ArcMotos);
+                    }
+                fclose(ArcMotos);
+            }
+            }
+            break;
+        case 1:
+            {
+            FILE*ArcAutos=fopen("RepAuto.txt","rb");
+            if(ArcAutos==NULL)
+            {
+
+            }
+            else
+            {
+                repartidores auxRep;
+                fread(&auxRep,sizeof(repartidores),1,ArcAutos);
+                    while(!feof(ArcAutos))
+                    {
+                        if(auxInt==auxRep.dni && c==0 && auxRep.zona==auxZona)
+                        {
+                            cout<<"//PEDIDO ASIGNADO//"<<endl;
+                            listar(auxRep,ListaPed,lista,cont);
+                            InsertarArbol(raiz,auxCod);
+                            c++;
+                            b++;
+                        }
+                        fread(&auxRep,sizeof(repartidores),1,ArcAutos);
+                    }
+                fclose(ArcAutos);
+            }
+            }
+            break;
+        case 2:
+            {
+            FILE*ArcCamioneta=fopen("RepCamioneta.txt","rb");
+            if(ArcCamioneta==NULL)
+            {
+
+            }
+            else
+            {
+                repartidores auxRep;
+                fread(&auxRep,sizeof(repartidores),1,ArcCamioneta);
+                    while(!feof(ArcCamioneta))
+                    {
+                        if(auxInt==auxRep.dni && c==0 && auxRep.zona==auxZona)
+                        {
+                            cout<<"//PEDIDO ASIGNADO//"<<endl;
+                            listar(auxRep,ListaPed,lista,cont);
+                            InsertarArbol(raiz,auxCod);
+                            c++;
+                            b++;
+                        }
+                        fread(&auxRep,sizeof(repartidores),1,ArcCamioneta);
+                    }
+                fclose(ArcCamioneta);
+            }
+            }
+            break;
+        case 3:
+            {
+            FILE*ArcCamion=fopen("RepCamion.txt","rb");
+            if(ArcCamion==NULL)
+            {
+
+            }
+            else
+            {
+                repartidores auxRep;
+                fread(&auxRep,sizeof(repartidores),1,ArcCamion);
+                    while(!feof(ArcCamion))
+                    {
+                        if(auxInt==auxRep.dni && c==0 && auxRep.zona==auxZona)
+                        {
+                            cout<<"//PEDIDO ASIGNADO//"<<endl;
+                            listar(auxRep,ListaPed,lista,cont);
+                            InsertarArbol(raiz,auxCod);
+                            c++;
+                            b++;
+                        }
+                        fread(&auxRep,sizeof(repartidores),1,ArcCamion);
+                    }
+                fclose(ArcCamion);
+            }
+            }
+            break;
+        }
+        if(b==0)
+        {
+            p=p->sig;
+            cont++;
+        }
+
+
+    }
+    if(ListaPed==NULL)
+        cout<<"//NO HAY MAS PEDIDOS//"<<endl;
+    if(c==0 && ListaPed!=NULL)
+        cout<<"//NO HAY REPARTIDORES PARA LOS PEDIDOS EN LISTA//"<<endl;
+
+}
+
+void listar(repartidores repartidor,NodoListaPedidos*&ListaPed,NodoLista*&lista,int cont)
+{
+    pedido auxPed;
+    repartidoresActivos auxRepAct;
+    NodoLista*L;
+
+    auxRepAct.dni=repartidor.dni;
+    strcpy(auxRepAct.nombre,repartidor.nombre);
+    strcpy(auxRepAct.patente,repartidor.patente);
+    auxRepAct.transp=repartidor.transp;
+    auxRepAct.zona=repartidor.zona;
+    auxRepAct.ListaPedidos=NULL;
+    L=InsertarOrdenado(lista,auxRepAct);
+    auxPed=desencolarPed(ListaPed,cont);
+    InsertarSubOrdenado(L->repartidores.ListaPedidos,auxPed);
+
+}
+
+void InsertarSubOrdenado(SubNodoLista*&sublista,pedido ped)
+{
+    SubNodoLista*n,*p,*ant;
+    n=new SubNodoLista;
+    n->paquete=ped;
+    p=sublista;
+    while(p!=NULL && p->paquete.importe > ped.importe)
+    {
+        ant=p;
+        p=p->sig;
+    }
+    n->sig=p;
+    if(p!=sublista)
+        ant->sig=n;
+    else
+        sublista=n;
+}
+
+pedido desencolarPed(NodoListaPedidos*&lista,int cont)
+{
+    pedido n;
+    NodoListaPedidos*p=lista,*ant;
+    for(int i=0;i<cont;i++)
+    {
+        ant=p;
+        p=p->sig;
+    }
+    n=p->Ped;
+    if(p==lista)
+        lista=p->sig;
+    else
+        ant->sig=p->sig;
+    delete p;
+    return n;
+}
+
+NodoLista*InsertarOrdenado(NodoLista*&lista,repartidoresActivos rep)
+{
+    NodoLista*ant,*p=lista;
+    while(p!=NULL && p->repartidores.dni<rep.dni)
+    {
+       ant=p;
+       p=p->sig;
+   }
+   if(p!=NULL && rep.dni==p->repartidores.dni)
+        return p;
+    else
+    {
+        NodoLista*n=new NodoLista;
+        n->repartidores=rep;
+        n->sig=p;
+        if(p!=lista)
+            ant->sig=n;
+        else
+            lista=n;
+        return n;
+    }
+}
+
+int verificarTrans(NodoListaPedidos*lista)
+{
+    pedido aux;
+    NodoListaPedidos*p;
+    p=lista;
+    aux=p->Ped;
+
+    if(aux.volumen>0 && aux.volumen<0.005)
+        {return 0;}//moto
+      else if(aux.volumen>=0.005 && aux.volumen<0.02)
+        {return 1;}//auto
+      else if(aux.volumen>=0.02 && aux.volumen<8)
+        {return 2;}//camioneta
+      else if(aux.volumen>=8)
+        {return 3;}//camion
+}
+
+int verificarZona(NodoListaPedidos*lista)
+{
+    pedido aux;
+    NodoListaPedidos*p;
+    p=lista;
+    aux=p->Ped;
+    return aux.zona;
+}
+
+int verificarCodigo(NodoListaPedidos*lista)
+{
+    pedido aux;
+    NodoListaPedidos*p;
+    p=lista;
+    aux=p->Ped;
+    return aux.codigo;
+}
+
+void parte3(NodoLista*&lista)
+{
+    NodoLista*p;
+    p=lista;
+    while(p!=NULL)
+    {
+        cout<<endl;
+        cout<<"//REPARTIDOR: //"<<endl;
+        cout<<"Nombre: "<<p->repartidores.nombre<<endl;
+        cout<<"Dni: "<<p->repartidores.dni<<endl;
+        cout<<"Patente: "<<p->repartidores.patente<<endl;
+        cout<<"Zona: "<<p->repartidores.zona<<endl;
+        cout<<"Transporte: "<<p->repartidores.transp<<endl;
+        mostrarSublista(p->repartidores.ListaPedidos);
+        p=p->sig;
+
+    }
+}
+
+void mostrarSublista(SubNodoLista*& lista)
+{
+    SubNodoLista*n;
+    int cont=1;
+    n=lista;
+    while(n!=NULL)
+    {
+        cout<<"//PEDIDO "<<cont<<"//"<<endl;
+        cout<<"Direccion: "<<n->paquete.domicilio<<endl;
+        cout<<"Importe: $"<<n->paquete.importe<<endl;
+        cout<<"Volumen: "<<n->paquete.volumen<<" Mts cubicos"<<endl;
+        cout<<"Zona: "<<n->paquete.zona<<endl;
+        cout<<"Codigo de comercio: "<<n->paquete.codigo<<endl;
+        cont++;
+        n=n->sig;
+    }
+}
