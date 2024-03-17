@@ -1,4 +1,4 @@
-Este "Proyecto" fue un trabajo practico llevado a cabo durante todo una cursada anual de la materia Algoritmos y estructura de datos.
+Este "Proyecto" fue un trabajo practico llevado a cabo durante todo una cursada anual de la materia Algoritmos y estructura de datos, donde usamos como el lenguaje c++ y como IDE codeblocks.
 
 	-El trabajo tiene cierta consigna de uso de listas, sublistas, colas, pilas, archivos y arboles.
 	-Las verificaciones no son concisas, por lo tanto dependen mucho del usuario, ya que en la cursada no fueron enseñadas.
